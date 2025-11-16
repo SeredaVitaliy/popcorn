@@ -53,43 +53,54 @@ const average = (arr) =>
 const KEY = "875e7a10";
 
 export default function App() {
+  const [query, setQuery] = useState("drive");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const query = "drive";
+  const tempQuery = "drive";
 
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-        );
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          );
 
-        if (!res.ok) throw new Error("Что-то пошло не так");
+          if (!res.ok) throw new Error("Что-то пошло не так");
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (data.Response === "False") throw new Error("Фильм не найден");
+          if (data.Response === "False") throw new Error("Фильм не найден");
 
-        setMovies(data.Search);
-      } catch (err) {
-        // console.error(err.message);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+          setMovies(data.Search);
+        } catch (err) {
+          // console.error(err.message);
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+        // .then((res) => res.json())
+        // .then((data) => setMovies(data.Search)),
       }
-      // .then((res) => res.json())
-      // .then((data) => setMovies(data.Search)),
-    }
-    fetchMovies();
-  }, []);
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </NavBar>
       <Main>
@@ -139,9 +150,7 @@ function NavBar({ children }) {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
