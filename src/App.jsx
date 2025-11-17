@@ -54,7 +54,7 @@ const average = (arr) =>
 const KEY = "875e7a10";
 
 export default function App() {
-  const [query, setQuery] = useState("drive");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,12 +79,14 @@ export default function App() {
 
   useEffect(
     function () {
+      const controller = new AbortController();
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
 
           if (!res.ok) throw new Error("Что-то пошло не так");
@@ -94,14 +96,14 @@ export default function App() {
           if (data.Response === "False") throw new Error("Фильм не найден");
 
           setMovies(data.Search);
+          setError("");
         } catch (err) {
-          // console.error(err.message);
-          setError(err.message);
+          if (err.name !== "AbortError") {
+            setError(err.message);
+          }
         } finally {
           setIsLoading(false);
         }
-        // .then((res) => res.json())
-        // .then((data) => setMovies(data.Search)),
       }
       if (query.length < 3) {
         setMovies([]);
@@ -109,7 +111,12 @@ export default function App() {
         return;
       }
 
+      handleCloseMovie();
       fetchMovies();
+
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
@@ -178,7 +185,7 @@ function Search({ query, setQuery }) {
     <input
       className="search"
       type="text"
-      placeholder="Search movies..."
+      placeholder="Найти фильм..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
     />
@@ -282,6 +289,22 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
 
   useEffect(
     function () {
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
+
+  useEffect(
+    function () {
       async function getMovieDetails() {
         setIsLoading(true);
         const res = await fetch(
@@ -300,9 +323,14 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     function () {
       if (!title) return;
       document.title = `Фильмы | ${title}`;
+
+      return function () {
+        document.title = "POPcorn";
+      };
     },
     [title]
   );
+
   return (
     <div className="details">
       {isLoading ? (
