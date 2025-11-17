@@ -259,6 +259,10 @@ body {
 .details {
   line-height: 1.4;
   font-size: 1.4rem;
+  line-height: 1.4;
+  font-size: 1.4rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 12rem);
 }
 
 .details header {
