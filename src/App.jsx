@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { StarRating } from "./components/StarRating";
 import { useMovies } from "./components/useMovies";
+import { useLocalStorageState } from "./components/useLocalStorageState";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -12,14 +13,11 @@ export default function App() {
 
   const [selectedId, setSelectedId] = useState(null);
 
-  //создание кастомного хука
-  const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
+  //создание кастомного хука - строка поиска
+  const { movies, isLoading, error } = useMovies(query);
 
-  // const [watched, setWatched] = useState([]);
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    return JSON.parse(storedValue);
-  });
+  //создание кастомного хука - Local storage
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
   function handleSelectMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
@@ -39,14 +37,6 @@ export default function App() {
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
-
-  useEffect(
-    function () {
-      //добавление сохранения в локал сторадж
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
 
   return (
     <>
