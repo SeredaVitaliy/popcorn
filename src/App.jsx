@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { StarRating } from "./components/StarRating";
 import { useMovies } from "./components/useMovies";
 import { useLocalStorageState } from "./components/useLocalStorageState";
+import { useKey } from "./components/useKey";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -104,23 +105,13 @@ function Search({ query, setQuery }) {
   //   el.focus();
   // }, []);
   const inputElement = useRef(null);
+  // кастомный хук
+  useKey("Enter", function () {
+    if (document.activeElement === inputElement.current) return;
+    inputElement.current.focus();
+    setQuery("");
+  });
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (document.activeElement === inputElement.current) return;
-
-        if (e.code === "Enter") {
-          inputElement.current.focus();
-          setQuery("");
-        }
-      }
-      // удаление текста из поля ввода при выборке
-      document.addEventListener("keydown", callback);
-      return () => document.addEventListener("keydown", callback);
-    },
-    [setQuery]
-  );
   return (
     <input
       className="search"
@@ -245,21 +236,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     // setAvgRating((avgRating) => (avgRating + userRating) / 2);
   }
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") {
-          onCloseMovie();
-        }
-      }
-
-      document.addEventListener("keydown", callback);
-      return function () {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  //кастомный хук для блока просмотренные фильмы - закрыть выбранный фильм по нажатию ESC
+  useKey("Escape", onCloseMovie);
 
   useEffect(
     function () {
