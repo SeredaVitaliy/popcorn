@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StarRating } from "./components/StarRating";
 
 const average = (arr) =>
@@ -150,6 +150,29 @@ function NavBar({ children }) {
 }
 
 function Search({ query, setQuery }) {
+  //добавление фокуса на строку поиска
+  // useEffect(function () {
+  //   const el = document.querySelector(".search");
+  //   el.focus();
+  // }, []);
+  const inputElement = useRef(null);
+
+  useEffect(
+    function () {
+      function callback(e) {
+        if (document.activeElement === inputElement.current) return;
+
+        if (e.code === "Enter") {
+          inputElement.current.focus();
+          setQuery("");
+        }
+      }
+      // удаление текста из поля ввода при выборке
+      document.addEventListener("keydown", callback);
+      return () => document.addEventListener("keydown", callback);
+    },
+    [setQuery]
+  );
   return (
     <input
       className="search"
@@ -157,6 +180,7 @@ function Search({ query, setQuery }) {
       placeholder="Найти фильм..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputElement}
     />
   );
 }
